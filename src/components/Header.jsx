@@ -1,5 +1,9 @@
-import React from "react";
-import { Navbar, NavbarBrand, NavbarMenuToggle, NavbarMenuItem, NavbarMenu, NavbarContent, NavbarItem, Link, Button } from "@nextui-org/react";
+import React, { useContext } from "react";
+import { Navbar, NavbarBrand, NavbarMenuToggle, NavbarMenuItem, NavbarMenu, NavbarContent, NavbarItem, Button, Avatar } from "@nextui-org/react";
+import { Link } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import { signOut } from "firebase/auth";
+import { auth } from "../utils/firebase";
 
 
 const AcmeLogo = () => (
@@ -29,6 +33,12 @@ export default function Header() {
         "Help & Feedback",
         "Log Out",
     ];
+
+    const { user, setUser } = useContext(AuthContext)
+    console.log("user in header=>", user)
+    const handleLogOutUser =async () => {
+        await signOut(auth);  
+    }
 
     return (
         <Navbar
@@ -63,21 +73,32 @@ export default function Header() {
                     </Link>
                 </NavbarItem>
                 <NavbarItem>
-                    <Link color="foreground" href="#">
+                    <Link color="foreground">
                         Integrations
                     </Link>
                 </NavbarItem>
             </NavbarContent>
 
             <NavbarContent justify="end">
-                <NavbarItem className="hidden lg:flex">
-                    <Link href="#">Login</Link>
-                </NavbarItem>
-                <NavbarItem>
-                    <Button as={Link} color="warning" href="#" variant="flat">
-                        Sign Up
-                    </Button>
-                </NavbarItem>
+               
+                {
+                    user?.isLogin ?
+                        <Avatar src={user?.userInfo?.photoUrl} size="md" />
+                        :
+                        <NavbarItem>
+                            <Button as={Link} variant="flat" className="hover:text-violet-700">
+                                <Link to={'/auth/signup'} >
+                                    Sign Up
+                                </Link>
+                            </Button>
+                        </NavbarItem>
+                }
+                 {user?.isLogin ? <Button color="primary" variant="light" onClick={handleLogOutUser}>Logout</Button>
+                    :
+                    <NavbarItem className="hidden lg:flex hover:text-violet-700">
+                        <Link to={'/auth/signin'}>Login</Link>
+                    </NavbarItem>
+                }
             </NavbarContent>
 
             <NavbarMenu>
