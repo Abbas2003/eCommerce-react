@@ -1,7 +1,8 @@
-import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../../utils/firebase";
+import { auth, db } from "../../utils/firebase";
+import { setDoc, doc } from "firebase/firestore";
 
 function SignIn() {
 
@@ -43,14 +44,25 @@ function SignIn() {
   }
 
   const [loading, setLoading] = useState(false)
-  const handleSignIn = async() =>  {
+
+
+  const handleSignIn = () =>  {
     try{
       setLoading(true)
-      await signInWithEmailAndPassword(auth, email, password).then(() => {
+      createUserWithEmailAndPassword(auth, email, password).then(async (res) => {
         navigate("/")
         console.log("User Signed In");
         setLoading(false)
-      })
+        
+        let obj = {
+          email: email,
+          password: password,
+          id: res.user.uid
+        }
+        console.log(obj.id);
+        
+        await setDoc(doc(db, "users", obj.id), obj)
+      }).catch((e) => console.log("Error=>", e.message))
     }
     catch(err){
       setLoading(false)
@@ -71,6 +83,7 @@ function SignIn() {
             <input
               id="email"
               type="email"
+              required
               className="w-full px-3 py-2 border rounded-lg text-gray-700 focus:outline-none focus:border-blue-300"
               placeholder="Enter your email"
               value={email}
@@ -84,12 +97,14 @@ function SignIn() {
             <input
               id="password"
               type="password"
+              required
               className="w-full px-3 py-2 border rounded-lg text-gray-700 focus:outline-none focus:border-blue-300"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+
           <div className="flex flex-col items-center justify-between">
             <button
               onClick={handleSignIn}
